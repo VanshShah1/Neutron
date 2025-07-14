@@ -26,7 +26,7 @@ def createNeutronId(tag):
 # Web componets #
 
 # TODO: Add event Attributes
-HTMLelementAttributes = ['value', 'accept', 'action', 'align', 'allow', 'alt', 'autocapitalize', 'autocomplete',
+HTMLelementAttributes = list(set(['value', 'accept', 'action', 'align', 'allow', 'alt', 'autocapitalize', 'autocomplete',
                          'autofocus', 'autoplay', 'background', 'bgcolor', 'border', 'buffered', 'capture', 'challenge',
                          'charset', 'checked', 'cite', 'id', 'className', 'code', 'codebase', 'color', 'cols', 'colspan',
                          'content', 'contenteditable', 'contextmenu', 'controls', 'coords', 'crossorigin', 'csp ',
@@ -48,7 +48,7 @@ HTMLelementAttributes = ['value', 'accept', 'action', 'align', 'allow', 'alt', '
                          'onpaste', 'onabort', 'oncanplay', 'oncanplaythrough', 'oncuechange', 'ondurationchange', 'onemptied', 'onended',
                          'onerror', 'onloadeddata', 'onloadedmetadata', 'onloadstart', 'onpause', 'onplay', 'onplaying', 'onprogress',
                          'onratechange', 'onseeked', 'onseeking', 'onstalled', 'onsuspend', 'ontimeupdate', 'onvolumechange',
-                         'onwaiting', 'ontoggle',]
+                         'onwaiting', 'ontoggle', 'accesskey', 'class', 'data-*', 'dir', 'lang', 'tabindex']))
 
 
 class HTMLelement:
@@ -152,6 +152,13 @@ class HTMLelement:
 
     innerHTML = property(innerHTML_get, innerHTML_set)
 
-    for attribute in HTMLelementAttributes:
-        exec(
-            f"{attribute} = property(lambda self: self.getAttribute('{attribute}'), lambda self, val: self.setAttribute('{attribute}', val))")
+    def __getattr__(self, attr):
+        if attr in HTMLelementAttributes:
+            return self.getAttribute(attr)
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
+
+    def __setattr__(self, attr, value):
+        if attr in HTMLelementAttributes:
+            self.setAttribute(attr, value)
+        else:
+            super().__setattr__(attr, value)

@@ -339,6 +339,45 @@ class Window:
             soup = BeautifulSoup(self.html, "html.parser")
             return [elements.HTMLelement(self, element.get('class')[0], element, True) for element in soup.find_all(name)]
 
+    def getElementsByClassName(self, name):
+        if self.running:
+            ElementsNeutronID = self.run_javascript("var elementsNeutronID = []; Array.from(document.getElementsByClassName('" + name + "')).forEach(function(item) { elementsNeutronID.push(item.className) }); '' + elementsNeutronID;")
+            return [elements.HTMLelement(self, NeutronID.split(' ')[0], None, True) for NeutronID in ElementsNeutronID.split(",")]
+        else:
+            soup = BeautifulSoup(self.html, "html.parser")
+            return [elements.HTMLelement(self, element.get('class')[0], element, True) for element in soup.find_all(class_=name)]
+
+    def querySelector(self, selector):
+        if self.running:
+            elementNeutronID = str(self.run_javascript(f"'' + document.querySelector("{selector}").className;"))
+            NeutronID = None
+            for classname in elementNeutronID.split(' '):
+                if "NeutronID_" in classname:
+                    NeutronID = classname
+                    break
+            if NeutronID:
+                return elements.HTMLelement(self, NeutronID, None, True)
+            else:
+                logging.warning(f'HTMLelement with selector "{selector}" was not found!')
+                return None
+        else:
+            soup = BeautifulSoup(self.html, "html.parser")
+            element = soup.select_one(selector)
+            if element:
+                NeutronID = element.get('class')[0]
+                return elements.HTMLelement(self, NeutronID, element, True)
+            else:
+                logging.warning(f'HTMLelement with selector "{selector}" was not found!')
+                return None
+
+    def querySelectorAll(self, selector):
+        if self.running:
+            ElementsNeutronID = self.run_javascript("var elementsNeutronID = []; Array.from(document.querySelectorAll('" + selector + "')).forEach(function(item) { elementsNeutronID.push(item.className) }); '' + elementsNeutronID;")
+            return [elements.HTMLelement(self, NeutronID.split(' ')[0], None, True) for NeutronID in ElementsNeutronID.split(",")]
+        else:
+            soup = BeautifulSoup(self.html, "html.parser")
+            return [elements.HTMLelement(self, element.get('class')[0], element, True) for element in soup.select(selector)]
+
     def createElement(self, tag):
         soup = BeautifulSoup(self.html, features="html.parser")
         elem = soup.new_tag(tag)
